@@ -15,7 +15,7 @@ const fetchGames = async () => {
 
 	const response = await axios.post(
 		url,
-		`fields name, cover; where cover != null; limit: 100;`,
+		`fields name, genres, tags, platforms, themes, first_release_date, summary, total_rating, total_rating_count, cover; where cover != null; limit: 100;`,
 		{ headers }
 	);
 
