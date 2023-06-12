@@ -5,10 +5,59 @@ const fs = require("fs");
 const axios = require("axios");
 const path = require("path");
 
-const startingDate = new Date(2016, 0, 1).getTime();
+const startingDate = new Date(2020, 0, 1).getTime() / 1000;
 const headers = {
 	"Client-ID": process.env.CLIENT_ID,
 	Authorization: `Bearer ${process.env.IGDB_TOKEN}`,
+};
+
+const fetchGenres = async () => {
+	const url = "https://api.igdb.com/v4/genres";
+	const response = await axios.post(url, `fields name;limit: 200;`, {
+		headers,
+	});
+	return response.data;
+};
+
+const fetchPlatforms = async () => {
+	const url = "https://api.igdb.com/v4/platforms";
+	const response = await axios.post(url, `fields name;limit: 500;`, {
+		headers,
+	});
+
+	console.log("response.data in fetchPlatforms", response.data);
+
+	const jsonData = JSON.stringify(response.data, null, 2);
+	const filePath = path.join(__dirname, "platforms.json");
+
+	fs.writeFile(filePath, jsonData, (err) => {
+		if (err) {
+			console.error("Error writing JSON file:", err);
+		} else {
+			console.log("JSON file created successfully.");
+		}
+	});
+	return response.data;
+};
+
+const fetchThemes = async () => {
+	const url = "https://api.igdb.com/v4/themes";
+	const response = await axios.post(url, `fields name;limit: 200;`, {
+		headers,
+	});
+
+	const jsonData = JSON.stringify(response.data, null, 2);
+	const filePath = path.join(__dirname, "themes.json");
+
+	fs.writeFile(filePath, jsonData, (err) => {
+		if (err) {
+			console.error("Error writing JSON file:", err);
+		} else {
+			console.log("JSON file created successfully.");
+		}
+	});
+
+	return response.data;
 };
 
 const fetchGames = async () => {
@@ -16,14 +65,14 @@ const fetchGames = async () => {
 
 	const response = await axios.post(
 		url,
-		`fields name, slug, genres, tags, platforms, themes, first_release_date, summary, total_rating, total_rating_count, cover, screenshots; where screenshots != null & cover != null & total_rating_count > 220 & first_release_date > ${startingDate}; limit: 20;`,
+		`fields name, slug, genres, platforms, themes, first_release_date, summary, total_rating, total_rating_count, cover, screenshots; where screenshots != null & cover != null & themes !=null & total_rating_count > 30 & first_release_date > ${startingDate}; limit: 200;`,
 		{ headers }
 	);
 
 	return response.data;
 };
 
-async function getCoverImage(coverId) {
+const getCoverImage = async (coverId) => {
 	const url = "https://api.igdb.com/v4/covers";
 
 	const response = await axios.post(url, `fields url; where id = ${coverId};`, {
@@ -35,7 +84,7 @@ async function getCoverImage(coverId) {
 	const coverUrl = response.data[0].url.replace("t_thumb", "t_cover_big");
 
 	return coverUrl;
-}
+};
 
 const getGameScreenshots = async (screenshotsArr) => {
 	const url = "https://api.igdb.com/v4/screenshots";
@@ -105,19 +154,6 @@ const getGameThemes = async (themesArr) => {
 	return themesReturnData;
 };
 
-const getGameTags = async (tagsArr) => {
-	const url = "https://api.igdb.com/v4/tags";
-	const tagsReturnData = [];
-	for (const tagID of tagsArr) {
-		const res = await axios.post(url, `fields name; where id = ${tagID};`, {
-			headers,
-		});
-		tagsReturnData.push(res.data[0].name);
-		await new Promise((resolve) => setTimeout(resolve, 1));
-	}
-	return tagsReturnData;
-};
-
 const generateGameObjects = async () => {
 	const gameData = await fetchGames();
 
@@ -170,3 +206,7 @@ generateGameObjects()
 	.catch((error) => {
 		console.error(error);
 	});
+
+// fetchThemes()
+// 	.then((games) => console.log(...games))
+// 	.catch((error) => console.error(error));
