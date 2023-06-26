@@ -6,6 +6,9 @@ const axios = require("axios");
 const path = require("path");
 
 const startingDate = new Date(2020, 0, 1).getTime() / 1000;
+
+const endingDate = new Date(2010, 0, 1).getTime() / 1000;
+
 const headers = {
 	"Client-ID": process.env.CLIENT_ID,
 	Authorization: `Bearer ${process.env.IGDB_TOKEN}`,
@@ -13,7 +16,7 @@ const headers = {
 
 const fetchGenres = async () => {
 	const url = "https://api.igdb.com/v4/genres";
-	const response = await axios.post(url, `fields name;limit: 200;`, {
+	const response = await axios.post(url, `fields name;limit: 1000;`, {
 		headers,
 	});
 	return response.data;
@@ -21,7 +24,7 @@ const fetchGenres = async () => {
 
 const fetchPlatforms = async () => {
 	const url = "https://api.igdb.com/v4/platforms";
-	const response = await axios.post(url, `fields name;limit: 500;`, {
+	const response = await axios.post(url, `fields name;limit: 1000;`, {
 		headers,
 	});
 
@@ -42,7 +45,7 @@ const fetchPlatforms = async () => {
 
 const fetchThemes = async () => {
 	const url = "https://api.igdb.com/v4/themes";
-	const response = await axios.post(url, `fields name;limit: 200;`, {
+	const response = await axios.post(url, `fields name;limit: 1200;`, {
 		headers,
 	});
 
@@ -65,7 +68,8 @@ const fetchGames = async () => {
 
 	const response = await axios.post(
 		url,
-		`fields name, slug, genres, platforms, themes, first_release_date, summary, total_rating, total_rating_count, cover, screenshots; where screenshots != null & cover != null & themes !=null & total_rating_count > 30 & first_release_date > ${startingDate}; limit: 200;`,
+		`fields name, slug, genres, platforms, themes, first_release_date, summary, total_rating, total_rating_count, cover, screenshots; where  screenshots != null & cover != null & themes !=null & genres != null & total_rating_count <= 30 & total_rating_count > 5 & first_release_date > ${startingDate}; limit: 500;`,
+		// `search "Diablo"; fields name, slug, genres, platforms, themes, first_release_date, summary, total_rating, total_rating_count, cover, screenshots; limit: 500;`,
 		{ headers }
 	);
 
@@ -205,6 +209,7 @@ generateGameObjects()
 	})
 	.catch((error) => {
 		console.error(error);
+		console.log(error.response.data);
 	});
 
 // fetchThemes()
